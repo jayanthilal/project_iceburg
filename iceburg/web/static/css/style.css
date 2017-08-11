@@ -1,0 +1,10 @@
+/* custom styles */
+
+@media print {
+ /* All your print styles go here */
+ .tab-content > .tab-pane {
+     display: block !important;
+     opacity: 1 !important;
+     visibility: visible !important;
+ }
+}
