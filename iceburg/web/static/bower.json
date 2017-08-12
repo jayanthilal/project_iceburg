@@ -1,9 +1,10 @@
 {
   "name": "project_iceburg",
   "authors": [
-    "Anthony Delosa <adelosa@gmail.com>"
+    "Anthony Delosa <adelosa@gmail.com>",
+    "Gourav Kumar (Crazyshaitan) <narang.gourav@gmail.com>"
   ],
-  "description": "openbank hackathon",
+  "description": "openbank hackathon 11-13th Aug 2017",
   "main": "",
   "license": "MIT",
   "homepage": "",
@@ -16,9 +17,14 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "^3.3.6",
     "metrics-graphics": "^2.11.0",
     "vue": "^2.3.4",
-    "plotly": "^1.18.1"
+    "plotly": "^1.18.1",
+    "bootstrap": "^3.3.7",
+    "jquery": "^3.2.1",
+    "fastclick": "^1.0.6",
+    "font-awesome": "^4.7.0",
+    "Ionicons": "ionicons#^2.0.1",
+    "jquery-ui": "1.11.4"
   }
 }
