@@ -256,47 +256,36 @@ def index():
         for transaction in transaction_result['transactions']:
             transactions.append(transaction)
 
-<<<<<<< HEAD
 
     transaction_list = list()
     for item in transactions:
         transaction_list.append(trans_to_obj(item))
+    
     transactions_df = json_normalize(transaction_list)
-    spend_category = transactions_df.groupby(['spend_type', 'detail_description']).count()
+    # at this point we have a pandas dataframe in transactions_df
+    # columns:
+    #   spend_type: string
+    #   amount: decimal
+    #   detail_description: string
+    #   date: datetime
+    #   new_balance: decimal
+    
     spend_summary = transactions_df[transactions_df['amount'] < 0]\
         .groupby(['detail_description'])['amount']\
         .sum().reset_index()
+    
     spend_summary_recoded = spend_summary.merge(CATEGORY_FRAME, how = 'left', on = 'detail_description')\
       .fillna('Misc')\
       .groupby(['custom_category'])['amount']\
       .sum()
+    
+
+    credits = transactions_df[transactions_df['amount'] > 0]['amount'].sum()
+    debits = transactions_df[transactions_df['amount'] < 0]['amount'].sum()
+    goals = {'debits': round(debits,0), 'credits': round(credits,0)}
+    return render_template('index.html', api_url=Config.API_URL, transactions=spend_summary_recoded, goals=goals)
 
 
-    return render_template('index.html', api_url=Config.API_URL, transactions=spend_summary_recoded.to_dict())
-=======
-    for transaction in transactions:
-        if not transaction['details'].get('description'):
-            pprint.pprint(transaction)
-
-    # summarise the transaction by 'details.description' tag..
-    count = collections.defaultdict(decimal.Decimal)
-    for item in transactions:
-        # count[item['other_account']['metadata']['more_info']] += decimal.Decimal(item['details']['value']['amount'])
-        count[item['details']['description']] += decimal.Decimal(item['details']['value']['amount'])
-    tran_summary = dict(count)
-    print(tran_summary)
-
-    # Work out current savings
-    credits = sum([int(tran_summary[tran]*100) for tran in tran_summary if tran_summary[tran] > 0])
-    print(credits)
-    debits = sum([int(tran_summary[tran]*100) for tran in tran_summary if tran_summary[tran] <= 0])
-    print(debits)
-    goals = {'debits': debits/100, 'credits': credits/100}
-
-    # OK, time to aggregate the categories into the following broad sections..
-    # TODO - Brads's working on this..
-
-    return render_template('index.html', api_url=Config.API_URL, transactions=tran_summary, goals=goals)
 
 
 def get_transactions(url):
@@ -310,4 +299,4 @@ def get_transactions(url):
         return get_transactions_response.json()
     else:
         return {}
->>>>>>> 11471dc083f6ad36ea72f1faee0f8612cdd250a1
+
