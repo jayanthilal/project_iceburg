@@ -283,7 +283,7 @@ def index():
     credits = transactions_df[transactions_df['amount'] > 0]['amount'].sum()
     debits = transactions_df[transactions_df['amount'] < 0]['amount'].sum()
     goals = {'debits': round(debits,0), 'credits': round(credits,0)}
-    return render_template('index.html', api_url=Config.API_URL, transactions=spend_summary_recoded, goals=goals)
+    return render_template('index.html', api_url=Config.API_URL, transactions = spend_summary_recoded.to_dict(), goals=goals)
 
 
 
