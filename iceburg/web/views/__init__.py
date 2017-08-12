@@ -11,7 +11,10 @@ LOGGER = logging.getLogger(__name__)
 
 app = Blueprint('web', __name__)
 
-
+@app.route('/login')
+def login():
+    return render_template('login.html', api_url=Config.API_URL)
+        
 @app.route('/')
 def index():
     login_result = requests.post(
