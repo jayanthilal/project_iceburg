@@ -28,7 +28,7 @@
   <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
   <![endif]-->
 </head>
-<body class="hold-transition login-page" style="">
+<body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo animated slideInLeft">
     <a href="#"><b>Ice</b>Berg</a>
@@ -37,7 +37,7 @@
   <div class="login-box-body">
     <p class="login-box-msg">Sign in to start your session</p>
 
-    <form action="#" method="post">
+
       <div class="form-group has-feedback">
         <input type="username" class="form-control" placeholder="Username">
         <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
@@ -56,11 +56,11 @@
         </div>
         <!-- /.col -->
         <div class="col-xs-4">
-          <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+          <a href="#" id="signIn" class="btn btn-primary btn-block btn-flat">Sign In</a>
         </div>
         <!-- /.col -->
       </div>
-    </form>
+
 <!--
     <div class="social-auth-links text-center">
       <p>- OR -</p>
@@ -79,6 +79,9 @@
 </div>
 <!-- /.login-box -->
 
+<!-- Wait modal-->
+<div class="modal"><!-- Place at bottom of page --></div>
+
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) 2.2.3 -->
 <script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
 <!-- Bootstrap 3.3.6 -->
@@ -92,6 +95,11 @@
       radioClass: 'iradio_square-blue',
       increaseArea: '20%' // optional
     });
+
+    $("#signIn").click(function() {
+      $('body').addClass("loading");
+    });
+
   });
 </script>
 </body>
