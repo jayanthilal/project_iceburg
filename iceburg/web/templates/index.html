@@ -5,4 +5,27 @@
 {% block container %}
 <h1>project iceburg</h1>
 <p><code>API URL={{ api_url }}</code></p>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Transactions</h3>
+            </div>
+            <table class="table">
+                <tr>
+                    <th>Date</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction }}</td>
+                    <td class="text-right">{{ transactions[transaction] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+        </div>
+    </div>
+</div>
 {% endblock %}
