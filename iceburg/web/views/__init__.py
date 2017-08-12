@@ -1,15 +1,111 @@
 import collections
 import decimal
 import logging
-
+from pandas.io.json import json_normalize
+import pandas as pd
 from flask import render_template, Blueprint, jsonify, request, Response, current_app, flash
 import requests
-
 from iceburg.web.config import Config
 
 LOGGER = logging.getLogger(__name__)
 
 app = Blueprint('web', __name__)
+
+CATEGORY_FRAME = pd.DataFrame(data = {
+    'detail_description': ['BT',
+        'Bar',
+        'Booking.com',
+        'Business Rates',
+        'Car Servicing',
+        'Cash Withdrawals',
+        'Cash withdrawal',
+        'Cinema',
+        'Coffee',
+        'Council Tax',
+        'Estate Agent',
+        'Filling Station',
+        'Filling station',
+        'Flights',
+        'Florist',
+        'Gas/Elec',
+        'Income',
+        'London arttraction',
+        'Mobile',
+        'Mobile phone',
+        'Monthly Golf membership',
+        'Monthly Netflix Membership',
+        'Paid in',
+        'Parking',
+        'Rent',
+        'Resaurant',
+        'Restaurant',
+        'Restaurant/Takeway',
+        'Restaurants',
+        'Salary',
+        'Saving',
+        'Savings',
+        'Shopping',
+        'Spa',
+        'Takeaway',
+        'Telephone',
+        'Tickets',
+        'Transfer',
+        'Water'
+    ],
+    'custom_category': [
+        'Misc',
+        'Leisure and Entertainment',
+        'Travel',
+        'Bills',
+        'Bills',
+        'Misc',
+        'Misc',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Bills',
+        'Misc',
+        'Transport',
+        'Transport',
+        'Travel',
+        'Misc',
+        'Bills',
+        'Misc',
+        'Travel',
+        'Bills',
+        'Bills',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Misc',
+        'Transport',
+        'Bills',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Misc',
+        'Misc',
+        'Misc',
+        'Groceries and shopping',
+        'Leisure and Entertainment',
+        'Leisure and Entertainment',
+        'Bills',
+        'Leisure and Entertainment',
+        'Misc',
+        'Bills'
+    ]
+})
+
+
+def trans_to_obj(item):
+    return({
+        'spend_type' : item['other_account']['metadata']['more_info'],
+        'amount' : decimal.Decimal(item['details']['value']['amount']),
+        'new_balance' : decimal.Decimal(item['details']['new_balance']['amount']),
+        'detail_description' : item['details']['description'],
+        'date' : item['details']['completed']
+        })
+
+
 
 @app.route('/login')
 def login():
@@ -127,11 +223,19 @@ def index():
         for transaction in transaction_result['transactions']:
             transactions.append(transaction)
 
-    # summarise the costs..
-    count = collections.defaultdict(decimal.Decimal)
-    for item in transactions:
-        count[item['other_account']['metadata']['more_info']] += decimal.Decimal(item['details']['value']['amount'])
-    tran_summary = dict(count)
-    print(tran_summary)
 
-    return render_template('index.html', api_url=Config.API_URL, transactions=tran_summary)
+    transaction_list = list()
+    for item in transactions:
+        transaction_list.append(trans_to_obj(item))
+    transactions_df = json_normalize(transaction_list)
+    spend_category = transactions_df.groupby(['spend_type', 'detail_description']).count()
+    spend_summary = transactions_df[transactions_df['amount'] < 0]\
+        .groupby(['detail_description'])['amount']\
+        .sum().reset_index()
+    spend_summary_recoded = spend_summary.merge(CATEGORY_FRAME, how = 'left', on = 'detail_description')\
+      .fillna('Misc')\
+      .groupby(['custom_category'])['amount']\
+      .sum()
+
+
+    return render_template('index.html', api_url=Config.API_URL, transactions=spend_summary_recoded.to_dict())
