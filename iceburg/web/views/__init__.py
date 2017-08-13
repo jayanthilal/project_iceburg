@@ -116,6 +116,10 @@ def trans_to_obj(item):
 def login():
     return render_template('login.html', api_url=Config.API_URL)
 
+@app.route('/home')
+def home():
+    return render_template('home.html', api_url=Config.API_URL)
+
 g_session = None
 
 
