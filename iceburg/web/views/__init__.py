@@ -1,14 +1,17 @@
-import collections
+from __future__ import division
+
 import decimal
 import logging
-from pandas.io.json import json_normalize
-import pandas as pd
-import pprint
 from multiprocessing.dummy import Pool as ThreadPool
 
-from flask import render_template, Blueprint, jsonify, request, Response, current_app, flash, session
+import arrow
+import pandas as pd
 import requests
+from flask import render_template, Blueprint, jsonify, current_app, flash, session
+from pandas.io.json import json_normalize
+
 from iceburg.web.config import Config
+from iceburg.web.views.travelplan import TravelPlanForm
 
 LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +112,6 @@ def trans_to_obj(item):
         })
 
 
-
 @app.route('/login')
 def login():
     return render_template('login.html', api_url=Config.API_URL)
@@ -160,6 +162,8 @@ def index():
     # }]
 
     accounts = get_accounts_response.json()
+
+    #
 
     # now get the transactions
     transaction_urls = ['/banks/{bank_id}/accounts/{account_id}/owner/transactions'.format(
@@ -256,11 +260,10 @@ def index():
         for transaction in transaction_result['transactions']:
             transactions.append(transaction)
 
-
     transaction_list = list()
     for item in transactions:
         transaction_list.append(trans_to_obj(item))
-    
+
     transactions_df = json_normalize(transaction_list)
     # at this point we have a pandas dataframe in transactions_df
     # columns:
@@ -269,23 +272,21 @@ def index():
     #   detail_description: string
     #   date: datetime
     #   new_balance: decimal
-    
+
     spend_summary = transactions_df[transactions_df['amount'] < 0]\
         .groupby(['detail_description'])['amount']\
         .sum().reset_index()
-    
+
     spend_summary_recoded = spend_summary.merge(CATEGORY_FRAME, how = 'left', on = 'detail_description')\
       .fillna('Misc')\
       .groupby(['custom_category'])['amount']\
       .sum()
-    
+
 
     credits = transactions_df[transactions_df['amount'] > 0]['amount'].sum()
     debits = transactions_df[transactions_df['amount'] < 0]['amount'].sum()
     goals = {'debits': round(debits,0), 'credits': round(credits,0)}
     return render_template('index.html', api_url=Config.API_URL, transactions = spend_summary_recoded.to_dict(), goals=goals)
-
-
 
 
 def get_transactions(url):
@@ -300,3 +301,51 @@ def get_transactions(url):
     else:
         return {}
 
+
+@app.route('/api/holiday_cost/<destination>/<rating>/<days>', methods=['GET'])
+def api_holiday_cost_get(destination, rating, days):
+
+    holiday_destination = {
+        'Australia': (180, 330, 800),
+        'Austria': (160, 440, 1200),
+        'Bahamas': (180, 330, 3000),
+        'United Kingdom': (88, 170, 2000),
+        'United States': (45, 160, 1200),
+        'Japan': (120, 330, 800),
+    }
+
+    if not holiday_destination.get(destination):
+        return jsonify({'message': 'Unable to load location'}), 404
+    rating = int(rating) - 1
+    if rating > 2 or rating < 0:
+        return jsonify({'message': 'Bad accom rating'}), 404
+    days = int(days)
+
+    return jsonify(
+        {
+            'cost': days * holiday_destination[destination][rating],
+            'destination': destination,
+            'rating': rating + 1,
+            'days': days,
+        }
+    )
+
+
+@app.route('/api/how_long_now/<cost>/<net_per_year>', methods=['GET'])
+def api_goal_target_date_get(cost, net_per_year):
+    cost = decimal.Decimal(cost)
+    net_per_year = decimal.Decimal(net_per_year)
+
+    return jsonify({'how_long_now': get_readable_duration(cost, net_per_year)})
+
+
+def get_readable_duration(cost, net_per_year):
+    days_to_save = int((cost/net_per_year) * 365)
+    target_date = arrow.utcnow().shift(days=days_to_save)
+    return target_date.humanize()
+
+
+@app.route('/travelplans', methods=['GET', 'PUT'])
+def travel_plan():
+    form = TravelPlanForm()
+    return render_template('travelplan.html', form=form)

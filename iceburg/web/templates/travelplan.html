@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan your travel{% endblock %}
+
+{% macro form_field(field) -%}
+<div class="form-group {% if field.errors %}has-error{% endif %}">
+    {{ field.label }}
+    {% if field.data %}
+        {{ field(class="form-control", value=field.data) }}
+    {% else %}
+        {{ field(class="form-control") }}
+    {% endif %}
+    {% if field.errors %}
+    <span class="glyphicon glyphicon-warning-sign form-control-feedback" aria-hidden="true"></span>
+    <span class="help-block">{{ field.errors[0] }}</span>
+    {% endif %}
+    <small class="form-text text-muted">{{ field.description }}</small>
+</div>
+{%- endmacro %}
+
+{% block container %}
+<form method="POST" action="{{url_for('web.travel_plan')}}" class="has-feedback">
+    {{ form.hidden_tag() }}
+    <h1>Travel plans</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group {% if form.facilities.errors %}has-error{% endif %}">
+                {{ form.facilities.label }}
+                {{ form.facilities(class="form-control") }}
+                <small id="facilitySelectHelp" class="form-text text-muted">{{ form.facilities.description }}</small>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if config.DEBUG %}
+<pre>{{ form.data | pprint }}</pre>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='bower_components/vue/dist/vue.js') }}"></script>
+<script>
+var sliders = new Vue({
+  el: '#sliders',
+  data: {
+  }
+})
+</script>
+{% endblock %}
